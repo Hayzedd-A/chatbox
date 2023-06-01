@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>ChatBot</title>
+</head>
+<body>
+    
+    <div class="mainContainer">
+
+        <div class="response">
+
+        </div>
+        <div class="request">
+            <div class="inputContainer">
+                <input type="text" placeholder="Ask a question">
+                <span id="send"><svg fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></span>
+            </div>
+        </div>
+    </div>
+    <script src="jquery-3.6.1.min.js"></script>
+    <script>
+        
+        
+    let requestContent = ''
+    $('.inputContainer #send').click(function() {
+        requestContent = $('input').val();
+        if (requestContent) {
+
+            $requestBox = $('<div>', {
+                'class': 'chatBox requestContent',
+                'text': requestContent
+            })
+            $('.response').append($requestBox)
+            AIprompt()
+            
+            $('input').val('')
+        }
+    })
+        // Make an AJAX call to the ChatGPT API
+        
+    function AIprompt() {
+        let $requestBox;
+        $.ajax({
+            url: 'https://api.openai.com/v1/chat/completions',
+            headers: {
+                'Authorization': 'Bearer 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',
+                'Content-Type': 'application/json'
+            },
+            method: 'POST',
+            data: JSON.stringify({
+                'model': 'gpt-3.5-turbo',
+                'messages': [
+                { 'role': 'system', 'content': 'You are a helpful assistant.' },
+                { 'role': 'user', 'content':  requestContent}
+                ]
+            }),
+            beforeSend: function() {
+                $('#send').html('<img src="loading.png" alt="">')
+            },
+            success: function(response) {
+                // Handle the response from the API
+                let AIresponse = response.choices[0].message.content;
+                $requestBox = $('<div>', {
+                'class': 'chatBox responseContent',
+                'text': AIresponse
+                })
+                $('#send').html('<svg fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>')
+                $('.response').append($requestBox)
+            },
+            error: function(xhr, status, error) {
+            $('#send').html('<svg fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>')
+            $requestBox = $('<div>', {
+            'class': 'chatBox responseContent',
+            'text': 'There was an error communicating with the Model. Check your connection and try again'
+            })
+            // Handle error
+            console.error(error);
+            $('.response').append($requestBox)
+        }
+        });
+        console.log(new Date())
+
+    }
+
+    </script>
+</body>
+</html>
